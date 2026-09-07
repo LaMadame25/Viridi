@@ -1468,7 +1468,7 @@ document.getElementById('useGpsBtn').addEventListener('click', ()=>{
     answered = true;
     status.textContent = "Il GPS non risponde in questa anteprima — apri il sito direttamente nel browser del telefono, oppure usa 'Scegli sulla mappa'.";
     status.style.color = 'var(--red)';
-  }, 4000);
+  }, 10000);
 
   navigator.geolocation.getCurrentPosition(
     (pos)=>{
@@ -1485,7 +1485,7 @@ document.getElementById('useGpsBtn').addEventListener('click', ()=>{
       status.textContent = "Posizione non accessibile da qui — tocca 'Scegli sulla mappa' per indicare il punto esatto.";
       status.style.color = 'var(--red)';
     },
-    { timeout: 6000 }
+    { timeout: 9000, enableHighAccuracy: true, maximumAge: 0 }
   );
 });
 
@@ -1896,8 +1896,58 @@ setTimeout(()=>{ initMap(); }, 100);
 // ---------- PWA: service worker + banner "Installa l'app" ----------
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.register("sw.js").then((registration) => {
+      // Caso 1: c'è già una nuova versione scaricata e in attesa (successo se
+      // l'utente aveva chiuso l'app prima di rispondere al banner la volta scorsa).
+      if (registration.waiting) {
+        showUpdateBanner(registration.waiting);
+      }
+      // Caso 2: una nuova versione viene scaricata proprio ora, mentre l'utente
+      // sta usando l'app.
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            showUpdateBanner(newWorker);
+          }
+        });
+      });
+    }).catch(() => {});
   });
+
+  // Quando la nuova versione prende davvero il controllo (dopo che l'utente
+  // ha premuto "Aggiorna"), ricarichiamo la pagina per mostrarla.
+  let refreshedOnce = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (refreshedOnce) return;
+    refreshedOnce = true;
+    window.location.reload();
+  });
+}
+
+function showUpdateBanner(worker){
+  if(document.getElementById('updateBanner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'updateBanner';
+  banner.style.cssText = 'position:fixed;bottom:78px;left:16px;right:16px;background:var(--accentText);color:#fff;padding:12px 14px;border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:150;box-shadow:0 4px 14px rgba(0,0,0,.25);';
+  banner.innerHTML = `
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span class="msr" style="font-size:20px;">system_update</span>
+      <span style="font-size:12.5px;font-weight:700;">È disponibile una nuova versione di Viridi</span>
+    </div>
+    <div style="display:flex;gap:6px;flex-shrink:0;">
+      <button id="updateNowBtn" style="background:#fff;color:var(--accentText);font-family:'Titillium Web',sans-serif;font-weight:800;font-size:12px;padding:7px 12px;border-radius:999px;border:none;">Aggiorna</button>
+      <button id="dismissUpdateBtn" style="background:none;border:none;color:#fff;"><span class="msr" style="font-size:18px;">close</span></button>
+    </div>
+  `;
+  document.body.appendChild(banner);
+
+  document.getElementById('updateNowBtn').addEventListener('click', ()=>{
+    worker.postMessage({ type: 'SKIP_WAITING' });
+    banner.remove();
+  });
+  document.getElementById('dismissUpdateBtn').addEventListener('click', ()=> banner.remove());
 }
 
 let deferredInstallPrompt = null;
