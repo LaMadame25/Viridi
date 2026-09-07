@@ -264,6 +264,9 @@
   .my-post-tile.no-photo .tile-text{font-size:10.5px;font-weight:600;color:var(--inkSoft);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;}
   .my-post-tile .tile-status{position:absolute;bottom:4px;left:4px;width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 1.5px rgba(0,0,0,.35);}
   .my-posts-empty{font-size:12.5px;color:var(--inkSoft);text-align:center;padding:18px 10px;}
+  .profile-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:6px 0 4px;}
+  .profile-avatar-big{width:76px;height:76px;border-radius:50%;background:var(--greenSoft);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;}
+  .profile-name-big{font-size:16px;font-weight:800;color:var(--ink);margin-top:4px;}
   .tag.stato{border:1.5px solid var(--red);color:var(--red);background:none;font-family:'Titillium Web';font-weight:900;text-transform:uppercase;letter-spacing:.4px;transform:rotate(-2deg);border-radius:6px;}
   .tag.stato.in-carico{border-color:var(--amber);color:var(--amber);}
   .tag.stato.risolto{border-color:var(--green);color:var(--green);}
@@ -386,12 +389,6 @@
       </div>
     </div>
 
-    <div class="my-stats-row" id="myStatsRow"></div>
-
-    <div class="settings-section-title">Le tue segnalazioni</div>
-    <div class="my-posts-grid" id="myPostsGrid"></div>
-    <div class="my-posts-empty" id="myPostsEmpty" style="display:none;">Non hai ancora pubblicato nessuna segnalazione.</div>
-
     <div class="settings-section-title">Aspetto</div>
     <div class="settings-card">
       <div class="settings-row" id="settingsThemeRow">
@@ -454,6 +451,27 @@
   </div>
 </div>
 
+<div id="profileOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--card);color:var(--ink);border-radius:18px;max-width:420px;width:100%;max-height:85vh;overflow-y:auto;padding:20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <div class="login-title disp" style="font-size:18px;">Profilo</div>
+      <button id="profileCloseBtn" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--ink);">✕</button>
+    </div>
+
+    <div class="profile-header">
+      <div class="profile-avatar-big" id="profileAvatar"></div>
+      <div class="profile-name-big" id="profileName"></div>
+      <div class="settings-admin-badge" id="profileAdminBadge" style="display:none;">AMMINISTRATORE</div>
+    </div>
+
+    <div class="my-stats-row" id="myStatsRow"></div>
+
+    <div class="settings-section-title">Le tue segnalazioni</div>
+    <div class="my-posts-grid" id="myPostsGrid"></div>
+    <div class="my-posts-empty" id="myPostsEmpty" style="display:none;">Non hai ancora pubblicato nessuna segnalazione.</div>
+  </div>
+</div>
+
 <header id="siteHeader">
   <div class="header-inner">
     <div class="brand" id="brandRow">
@@ -467,6 +485,7 @@
       <button id="modBtn" style="display:none;background:none;border:none;color:#fff;cursor:pointer;" title="Moderazione"><span class="msr" style="font-size:20px;">shield_person</span></button>
       <button id="logoutBtn" style="display:none;background:none;border:none;color:#fff;cursor:pointer;" title="Esci"><span class="msr" style="font-size:20px;">logout</span></button>
       <button class="theme-toggle" id="themeToggle" style="display:none;" title="Cambia tema"><span class="msr" id="themeIcon" style="font-size:17px;">dark_mode</span></button>
+      <button id="profileBtn" style="background:none;border:none;color:#fff;cursor:pointer;" title="Profilo"><span class="msr" style="font-size:20px;">account_circle</span></button>
       <button class="theme-toggle" id="settingsBtn" title="Impostazioni"><span class="msr" style="font-size:19px;">settings</span></button>
     </div>
   </div>
@@ -947,6 +966,13 @@ function renderSettingsPage(){
   document.getElementById('settingsAdminSection').style.display = currentUser.isAdmin ? '' : 'none';
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.getElementById('settingsThemeSwitch').classList.toggle('on', isDark);
+}
+
+function renderProfilePage(){
+  if(!currentUser) return;
+  document.getElementById('profileAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+  document.getElementById('profileName').textContent = currentUser.name;
+  document.getElementById('profileAdminBadge').style.display = currentUser.isAdmin ? '' : 'none';
   renderMyProfile();
 }
 
@@ -1004,7 +1030,7 @@ document.getElementById('myPostsGrid').addEventListener('click', (e)=>{
   if(fotoList.length > 0){
     openLightboxFromProfile(fotoList, 0);
   } else {
-    document.getElementById('settingsOverlay').classList.add('hidden');
+    document.getElementById('profileOverlay').classList.add('hidden');
     setTimeout(()=>{
       const card = document.querySelector(`.card.post[data-id="${postId}"]`);
       if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1030,6 +1056,13 @@ document.getElementById('settingsBtn').addEventListener('click', ()=>{
 });
 document.getElementById('settingsCloseBtn').addEventListener('click', ()=>{
   document.getElementById('settingsOverlay').classList.add('hidden');
+});
+document.getElementById('profileBtn').addEventListener('click', ()=>{
+  renderProfilePage();
+  document.getElementById('profileOverlay').classList.remove('hidden');
+});
+document.getElementById('profileCloseBtn').addEventListener('click', ()=>{
+  document.getElementById('profileOverlay').classList.add('hidden');
 });
 document.getElementById('settingsLogoutBtn').addEventListener('click', ()=>{
   document.getElementById('logoutBtn').click();
@@ -2141,7 +2174,7 @@ function showIOSInstallBanner(){
   // Esposta globalmente così anche la griglia del profilo (fuori da questo modulo)
   // può aprire la stessa vista a schermo intero con zoom.
   window.openLightboxFromProfile = function(fotoList, startIndex){
-    document.getElementById('settingsOverlay').classList.add('hidden');
+    document.getElementById('profileOverlay').classList.add('hidden');
     openLightbox(fotoList, startIndex);
   };
   function closeLightbox(){
