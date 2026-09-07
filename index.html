@@ -250,6 +250,8 @@
   .post-time{font-size:12px;color:var(--inkSoft);}
   .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;align-items:center;}
   .tag{font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;background:var(--greenSoft);color:var(--accentText);}
+  .tag-location{text-decoration:none;display:inline-flex;align-items:center;cursor:pointer;}
+  .tag-location:active{opacity:.7;}
   .tag.stato{border:1.5px solid var(--red);color:var(--red);background:none;font-family:'Titillium Web';font-weight:900;text-transform:uppercase;letter-spacing:.4px;transform:rotate(-2deg);border-radius:6px;}
   .tag.stato.in-carico{border-color:var(--amber);color:var(--amber);}
   .tag.stato.risolto{border-color:var(--green);color:var(--green);}
@@ -1295,7 +1297,7 @@ function renderFeed(){
         <div>
           <div><span class="post-name disp">${p.autore}</span> <span class="post-time">· ${p.quando}</span></div>
           <div class="tag-row">
-            <span class="tag"><span class="msr" style="font-size:11px;vertical-align:-1px;">location_on</span> ${p.via || nearestZoneLabel(p.lat,p.lng)}</span>
+            <a class="tag tag-location" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener"><span class="msr" style="font-size:11px;vertical-align:-1px;">location_on</span> ${p.via || nearestZoneLabel(p.lat,p.lng)}</a>
             ${(p.comune ? p.comune === "San Marco Evangelista" : isSanMarco(p.lat,p.lng)) ? `<span class="tag" style="background:var(--greenSoft);color:var(--accentText);">★ San Marco Ev.</span>` : ''}
           </div>
         </div>
