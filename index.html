@@ -252,6 +252,18 @@
   .tag{font-size:10px;padding:3px 8px;border-radius:999px;font-weight:800;background:var(--greenSoft);color:var(--accentText);}
   .tag-location{text-decoration:none;display:inline-flex;align-items:center;cursor:pointer;}
   .tag-location:active{opacity:.7;}
+  /* Pagina profilo nel pannello Impostazioni, stile griglia Instagram */
+  .my-stats-row{display:flex;justify-content:space-around;text-align:center;margin:16px 0 4px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line);}
+  .my-stats-row .stat-num{font-size:17px;font-weight:800;color:var(--ink);}
+  .my-stats-row .stat-label{font-size:10.5px;color:var(--inkSoft);font-weight:600;margin-top:2px;}
+  .my-posts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3px;margin-bottom:10px;}
+  .my-post-tile{position:relative;aspect-ratio:1/1;border-radius:6px;overflow:hidden;background:var(--bg);cursor:pointer;}
+  .my-post-tile img{width:100%;height:100%;object-fit:cover;display:block;}
+  .my-post-tile .tile-multi{position:absolute;top:5px;right:5px;color:#fff;font-size:14px;text-shadow:0 1px 3px rgba(0,0,0,.6);}
+  .my-post-tile.no-photo{display:flex;align-items:center;justify-content:center;padding:8px;text-align:center;}
+  .my-post-tile.no-photo .tile-text{font-size:10.5px;font-weight:600;color:var(--inkSoft);line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;}
+  .my-post-tile .tile-status{position:absolute;bottom:4px;left:4px;width:8px;height:8px;border-radius:50%;box-shadow:0 0 0 1.5px rgba(0,0,0,.35);}
+  .my-posts-empty{font-size:12.5px;color:var(--inkSoft);text-align:center;padding:18px 10px;}
   .tag.stato{border:1.5px solid var(--red);color:var(--red);background:none;font-family:'Titillium Web';font-weight:900;text-transform:uppercase;letter-spacing:.4px;transform:rotate(-2deg);border-radius:6px;}
   .tag.stato.in-carico{border-color:var(--amber);color:var(--amber);}
   .tag.stato.risolto{border-color:var(--green);color:var(--green);}
@@ -373,6 +385,12 @@
         <div class="settings-admin-badge" id="settingsAdminBadge" style="display:none;">AMMINISTRATORE</div>
       </div>
     </div>
+
+    <div class="my-stats-row" id="myStatsRow"></div>
+
+    <div class="settings-section-title">Le tue segnalazioni</div>
+    <div class="my-posts-grid" id="myPostsGrid"></div>
+    <div class="my-posts-empty" id="myPostsEmpty" style="display:none;">Non hai ancora pubblicato nessuna segnalazione.</div>
 
     <div class="settings-section-title">Aspetto</div>
     <div class="settings-card">
@@ -929,7 +947,70 @@ function renderSettingsPage(){
   document.getElementById('settingsAdminSection').style.display = currentUser.isAdmin ? '' : 'none';
   const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
   document.getElementById('settingsThemeSwitch').classList.toggle('on', isDark);
+  renderMyProfile();
 }
+
+function renderMyProfile(){
+  const myPosts = posts.filter(p => p.isMine);
+
+  // Statistiche in stile "post / like ricevuti / risolte", come una bio social
+  const totLike = myPosts.reduce((sum, p) => sum + (p.like || 0), 0);
+  const totRisolte = myPosts.filter(p => p.stato === "Risolto").length;
+  document.getElementById('myStatsRow').innerHTML = `
+    <div><div class="stat-num">${myPosts.length}</div><div class="stat-label">Segnalazioni</div></div>
+    <div><div class="stat-num">${totLike}</div><div class="stat-label">Like ricevuti</div></div>
+    <div><div class="stat-num">${totRisolte}</div><div class="stat-label">Risolte</div></div>
+  `;
+
+  const grid = document.getElementById('myPostsGrid');
+  const empty = document.getElementById('myPostsEmpty');
+  if(myPosts.length === 0){
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // Più recenti prima, come una griglia profilo social
+  const ordered = [...myPosts].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+  grid.innerHTML = ordered.map(p => {
+    const fotoList = (p.fotos && p.fotos.length) ? p.fotos : (p.foto ? [p.foto] : []);
+    const dotColor = STATO_COLOR[p.stato] || '#999';
+    if(fotoList.length > 0){
+      return `
+        <div class="my-post-tile" data-post-id="${p.id}" data-has-photo="1">
+          <img src="${fotoList[0]}" />
+          ${fotoList.length > 1 ? `<span class="msr tile-multi">photo_library</span>` : ''}
+          <span class="tile-status" style="background:${dotColor};"></span>
+        </div>`;
+    }
+    return `
+      <div class="my-post-tile no-photo" data-post-id="${p.id}" data-has-photo="0">
+        <div class="tile-text">${(p.testo || '').slice(0,80)}</div>
+        <span class="tile-status" style="background:${dotColor};"></span>
+      </div>`;
+  }).join('');
+}
+
+// Al tocco di una tile: se ha foto, apre subito la vista a schermo intero (lightbox);
+// altrimenti chiude le Impostazioni e scorre fino a quella segnalazione nel Forum.
+document.getElementById('myPostsGrid').addEventListener('click', (e)=>{
+  const tile = e.target.closest('.my-post-tile');
+  if(!tile) return;
+  const postId = tile.dataset.postId;
+  const post = posts.find(p => p.id === postId);
+  if(!post) return;
+  const fotoList = (post.fotos && post.fotos.length) ? post.fotos : (post.foto ? [post.foto] : []);
+  if(fotoList.length > 0){
+    openLightboxFromProfile(fotoList, 0);
+  } else {
+    document.getElementById('settingsOverlay').classList.add('hidden');
+    setTimeout(()=>{
+      const card = document.querySelector(`.card.post[data-id="${postId}"]`);
+      if(card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 150);
+  }
+});
 
 document.getElementById('settingsThemeRow').addEventListener('click', ()=>{
   document.getElementById('themeToggle').click();
@@ -2057,6 +2138,12 @@ function showIOSInstallBanner(){
     document.body.style.overflow = 'hidden';
     showIndex(startIndex || 0);
   }
+  // Esposta globalmente così anche la griglia del profilo (fuori da questo modulo)
+  // può aprire la stessa vista a schermo intero con zoom.
+  window.openLightboxFromProfile = function(fotoList, startIndex){
+    document.getElementById('settingsOverlay').classList.add('hidden');
+    openLightbox(fotoList, startIndex);
+  };
   function closeLightbox(){
     overlay.classList.remove('open');
     document.body.style.overflow = '';
