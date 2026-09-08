@@ -1576,32 +1576,47 @@ document.getElementById('useGpsBtn').addEventListener('click', ()=>{
     status.style.color = 'var(--red)';
     return;
   }
+
+  // Tentativo 1: massima precisione (GPS vero). Se il telefono è in risparmio
+  // energetico o al chiuso, può volerci più tempo o non arrivare mai a un fix.
+  attemptGeolocation({ timeout: 8000, enableHighAccuracy: true, maximumAge: 0 }, () => {
+    // Tentativo 2 (fallback): posizione più veloce ma meno precisa (rete/Wi-Fi),
+    // molto più affidabile quando il GPS vero è lento o bloccato dal risparmio energetico.
+    status.textContent = "GPS lento, provo con una posizione più rapida...";
+    status.style.color = 'var(--inkSoft)';
+    attemptGeolocation({ timeout: 6000, enableHighAccuracy: false, maximumAge: 60000 }, () => {
+      status.textContent = "Posizione non accessibile da qui — tocca 'Scegli sulla mappa' per indicare il punto esatto.";
+      status.style.color = 'var(--red)';
+    });
+  });
+});
+
+function attemptGeolocation(options, onGiveUp){
+  const status = document.getElementById('locStatus');
   let answered = false;
-  const silentBlockTimer = setTimeout(()=>{
+  const timer = setTimeout(()=>{
     if(answered) return;
     answered = true;
-    status.textContent = "Il GPS non risponde in questa anteprima — apri il sito direttamente nel browser del telefono, oppure usa 'Scegli sulla mappa'.";
-    status.style.color = 'var(--red)';
-  }, 10000);
+    onGiveUp();
+  }, options.timeout + 1000); // un secondo di margine oltre al timeout nativo del GPS
 
   navigator.geolocation.getCurrentPosition(
     (pos)=>{
       if(answered) return;
       answered = true;
-      clearTimeout(silentBlockTimer);
+      clearTimeout(timer);
       pendingLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
       updateLocStatus();
     },
     (err)=>{
       if(answered) return;
       answered = true;
-      clearTimeout(silentBlockTimer);
-      status.textContent = "Posizione non accessibile da qui — tocca 'Scegli sulla mappa' per indicare il punto esatto.";
-      status.style.color = 'var(--red)';
+      clearTimeout(timer);
+      onGiveUp();
     },
-    { timeout: 9000, enableHighAccuracy: true, maximumAge: 0 }
+    options
   );
-});
+}
 
 function enterPickMode(){
   pickModeActive = true;
