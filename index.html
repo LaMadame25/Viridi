@@ -267,6 +267,16 @@
   .profile-header{display:flex;flex-direction:column;align-items:center;text-align:center;gap:6px;padding:6px 0 4px;}
   .profile-avatar-big{width:76px;height:76px;border-radius:50%;background:var(--greenSoft);color:var(--accentText);display:flex;align-items:center;justify-content:center;font-size:30px;font-weight:800;}
   .profile-name-big{font-size:16px;font-weight:800;color:var(--ink);margin-top:4px;}
+  /* Mappa: toolbar cestini + modale proposta */
+  .map-toolbar{display:flex;gap:8px;padding:8px 2px;flex-wrap:wrap;}
+  .map-chip{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--inkSoft);}
+  .map-chip.active{border-color:var(--green);color:var(--accentText);background:var(--greenSoft);}
+  .bin-pick-hint{display:none;align-items:center;justify-content:space-between;gap:8px;background:var(--greenSoft);color:var(--accentText);font-size:12px;font-weight:700;padding:9px 12px;border-radius:12px;margin:0 2px 8px;}
+  .bin-pick-hint.show{display:flex;}
+  .bin-type-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .bin-type-btn{font-size:12px;font-weight:700;padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);background:none;color:var(--ink);}
+  .bin-type-btn.selected{border-color:var(--green);background:var(--greenSoft);color:var(--accentText);}
+  .mod-section-title{font-weight:800;font-size:13px;margin:18px 0 10px;color:var(--ink);}
   .tag.stato{border:1.5px solid var(--red);color:var(--red);background:none;font-family:'Titillium Web';font-weight:900;text-transform:uppercase;letter-spacing:.4px;transform:rotate(-2deg);border-radius:6px;}
   .tag.stato.in-carico{border-color:var(--amber);color:var(--amber);}
   .tag.stato.risolto{border-color:var(--green);color:var(--green);}
@@ -370,6 +380,8 @@
       <button id="modCloseBtn" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button>
     </div>
     <div id="modList"></div>
+    <div class="mod-section-title">Cestini proposti da approvare</div>
+    <div id="modBinsList"></div>
   </div>
 </div>
 
@@ -657,6 +669,14 @@
   <!-- PAGE 4: MAPPA -->
   <section class="page" data-page="mappa">
     <div class="map-page-inner">
+      <div class="map-toolbar">
+        <button type="button" class="map-chip" id="toggleBinsBtn"><span class="msr" style="font-size:14px;">delete</span> Cestini</button>
+        <button type="button" class="map-chip" id="proposeBinBtn"><span class="msr" style="font-size:14px;">add_location_alt</span> Proponi un cestino</button>
+      </div>
+      <div class="bin-pick-hint" id="binPickHint">
+        <span>Tocca un punto della mappa per posizionare il cestino</span>
+        <button type="button" id="binPickCancelBtn" style="background:none;border:none;color:var(--accentText);font-weight:800;">Annulla</button>
+      </div>
       <div id="leafletMap"></div>
       <div id="confirmLocBar">
         <span id="confirmLocText" style="font-size:12px;color:var(--inkSoft);">Tocca un punto della mappa per posizionare il pin</span>
@@ -668,6 +688,24 @@
       <div class="map-hint-bar"><span class="msr" style="font-size:13px;vertical-align:-2px;">info</span> Il colore del pin indica lo stato: <b style="color:#B5541B;">●</b> segnalato · <b style="color:#C08A2E;">●</b> in carico · <b style="color:#1F4D2C;">●</b> risolto. La <b>★</b> indica una segnalazione a San Marco Evangelista.</div>
     </div>
   </section>
+
+  <div id="binProposeOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:310;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--card);color:var(--ink);border-radius:18px;max-width:400px;width:100%;padding:20px;">
+      <div class="login-title disp" style="font-size:16px;">Che tipo di punto è?</div>
+      <div class="bin-type-options" id="binTypeOptions">
+        <button type="button" class="bin-type-btn" data-tipo="Cestino stradale">🗑️ Cestino stradale</button>
+        <button type="button" class="bin-type-btn" data-tipo="Isola ecologica">♻️ Isola ecologica</button>
+        <button type="button" class="bin-type-btn" data-tipo="Campana vetro">🍾 Campana vetro</button>
+        <button type="button" class="bin-type-btn" data-tipo="Contenitore organico">🍂 Contenitore organico</button>
+        <button type="button" class="bin-type-btn" data-tipo="Altro punto di raccolta">📍 Altro</button>
+      </div>
+      <textarea id="binNoteInput" maxlength="200" placeholder="Note (facoltativo)" rows="2" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-family:inherit;font-size:13px;resize:none;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button type="button" id="binProposeCancelBtn" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:none;color:var(--ink);font-weight:700;">Annulla</button>
+        <button type="button" id="binProposeSubmitBtn" disabled style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--green);color:#fff;font-weight:700;opacity:.5;">Invia proposta</button>
+      </div>
+    </div>
+  </div>
 
   <!-- PAGE 5: STATISTICHE -->
   <section class="page" data-page="statistiche">
@@ -818,6 +856,12 @@ document.querySelectorAll('#calComuneBannerRow .comune-banner').forEach(btn=>{
 let map, markersLayer;
 let pendingMarker = null;
 let pickModeActive = false;
+let bins = [];
+let binsLayer = null;
+let binsVisible = false;
+let pickBinModeActive = false;
+let pendingBinLoc = null;
+let pendingBinTipo = null;
 let currentUser = null;
 let selectedLoginIcon = "eco";
 
@@ -946,6 +990,7 @@ function finishLogin(user){
   document.getElementById('logoutBtn').style.display = '';
   if(currentUser.isAdmin) document.getElementById('modBtn').style.display = '';
   loadPosts();
+  loadBins();
   setTimeout(()=>{ if(map) map.invalidateSize(); }, 100);
 }
 
@@ -1203,37 +1248,82 @@ async function openModeration(){
     const reported = await res.json();
     if(reported.length === 0){
       list.innerHTML = '<div style="padding:20px 0;color:var(--inkSoft);">Nessun post segnalato al momento.</div>';
+    } else {
+      list.innerHTML = reported.map(p => `
+        <div style="border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:10px;">
+          <div style="font-weight:800;margin-bottom:4px;">${escapeHtml(p.autore)}</div>
+          <div style="font-size:13px;margin-bottom:8px;">${escapeHtml(p.testo)}</div>
+          <div style="display:flex;gap:8px;">
+            <button class="mod-restore" data-id="${p.id}" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--green);background:none;color:var(--accentText);font-weight:700;">Ripristina</button>
+            <button class="mod-delete" data-id="${p.id}" style="flex:1;padding:8px;border-radius:8px;border:none;background:#C0392B;color:#fff;font-weight:700;">Elimina</button>
+          </div>
+        </div>
+      `).join('');
+      document.querySelectorAll('.mod-restore, .mod-delete').forEach(btn=>{
+        btn.addEventListener('click', async ()=>{
+          const id = btn.dataset.id;
+          const action = btn.classList.contains('mod-delete') ? 'delete' : 'restore';
+          btn.disabled = true;
+          try{
+            await fetch(`${API_BASE}/posts-moderation-action`, {
+              method: 'POST', headers: await authHeaders(),
+              body: JSON.stringify({ id, action })
+            });
+            openModeration();
+            loadPosts();
+          }catch(err){
+            btn.disabled = false;
+          }
+        });
+      });
+    }
+  }catch(err){
+    list.innerHTML = '<div style="padding:20px 0;color:var(--red);">Errore nel caricamento.</div>';
+  }
+  loadPendingBins();
+}
+
+async function loadPendingBins(){
+  const list = document.getElementById('modBinsList');
+  list.innerHTML = 'Caricamento...';
+  try{
+    const res = await fetch(`${API_BASE}/bins-pending-list`, { headers: await authHeaders() });
+    if(!res.ok) throw new Error();
+    const pending = await res.json();
+    if(pending.length === 0){
+      list.innerHTML = '<div style="padding:10px 0;color:var(--inkSoft);">Nessun cestino in attesa di approvazione.</div>';
       return;
     }
-    list.innerHTML = reported.map(p => `
+    list.innerHTML = pending.map(b => `
       <div style="border:1px solid #eee;border-radius:12px;padding:12px;margin-bottom:10px;">
-        <div style="font-weight:800;margin-bottom:4px;">${escapeHtml(p.autore)}</div>
-        <div style="font-size:13px;margin-bottom:8px;">${escapeHtml(p.testo)}</div>
+        <div style="font-weight:800;margin-bottom:4px;">${escapeHtml(b.tipo)} — ${escapeHtml(b.comune)}</div>
+        <div style="font-size:12px;color:var(--inkSoft);margin-bottom:4px;">Proposto da ${escapeHtml(b.proposedBy || 'un cittadino')}</div>
+        ${b.note ? `<div style="font-size:13px;margin-bottom:8px;">${escapeHtml(b.note)}</div>` : ''}
         <div style="display:flex;gap:8px;">
-          <button class="mod-restore" data-id="${p.id}" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--green);background:none;color:var(--accentText);font-weight:700;">Ripristina</button>
-          <button class="mod-delete" data-id="${p.id}" style="flex:1;padding:8px;border-radius:8px;border:none;background:#C0392B;color:#fff;font-weight:700;">Elimina</button>
+          <button class="bin-approve" data-id="${b.id}" style="flex:1;padding:8px;border-radius:8px;border:none;background:var(--green);color:#fff;font-weight:700;">Approva</button>
+          <button class="bin-reject" data-id="${b.id}" style="flex:1;padding:8px;border-radius:8px;border:1px solid #C0392B;background:none;color:#C0392B;font-weight:700;">Rifiuta</button>
         </div>
       </div>
     `).join('');
-    document.querySelectorAll('.mod-restore, .mod-delete').forEach(btn=>{
+    document.querySelectorAll('.bin-approve, .bin-reject').forEach(btn=>{
       btn.addEventListener('click', async ()=>{
         const id = btn.dataset.id;
-        const action = btn.classList.contains('mod-delete') ? 'delete' : 'restore';
+        const action = btn.classList.contains('bin-approve') ? 'approve' : 'reject';
         btn.disabled = true;
         try{
-          await fetch(`${API_BASE}/posts-moderation-action`, {
+          await fetch(`${API_BASE}/bins-moderate`, {
             method: 'POST', headers: await authHeaders(),
             body: JSON.stringify({ id, action })
           });
-          openModeration();
-          loadPosts();
+          loadPendingBins();
+          loadBins();
         }catch(err){
           btn.disabled = false;
         }
       });
     });
   }catch(err){
-    list.innerHTML = '<div style="padding:20px 0;color:var(--red);">Errore nel caricamento.</div>';
+    list.innerHTML = '<div style="padding:10px 0;color:var(--red);">Errore nel caricamento.</div>';
   }
 }
 
@@ -1295,8 +1385,16 @@ function initMap(){
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
+  binsLayer = L.layerGroup(); // non aggiunto alla mappa finché l'utente non attiva "Cestini"
 
   map.on('click', (e) => {
+    if(pickBinModeActive){
+      pendingBinLoc = { lat: e.latlng.lat, lng: e.latlng.lng };
+      pickBinModeActive = false;
+      document.getElementById('binPickHint').classList.remove('show');
+      openBinProposeModal();
+      return;
+    }
     if(!pickModeActive) return;
     pendingLocation = { lat: e.latlng.lat, lng: e.latlng.lng };
     updateLocStatus();
@@ -1304,6 +1402,33 @@ function initMap(){
 
   renderMarkers();
   setTimeout(()=> map.invalidateSize(), 150);
+}
+
+function binIcon(){
+  return L.divIcon({
+    className: 'pin-marker',
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:#3D5A45;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;font-size:12px;">🗑️</div>`,
+    iconSize:[22,22], iconAnchor:[11,11]
+  });
+}
+
+function renderBinMarkers(){
+  if(!binsLayer) return;
+  binsLayer.clearLayers();
+  bins.forEach(b=>{
+    const marker = L.marker([b.lat, b.lng], { icon: binIcon() });
+    marker.bindPopup(`<b>${b.tipo}</b><br><small>${b.comune}</small>${b.note ? `<br>${b.note}` : ''}`);
+    binsLayer.addLayer(marker);
+  });
+}
+
+async function loadBins(){
+  try{
+    const res = await fetch(`${API_BASE}/bins-list`);
+    if(!res.ok) return;
+    bins = await res.json();
+    renderBinMarkers();
+  }catch(err){ /* silenzioso: i cestini sono un livello opzionale, non blocca il resto dell'app */ }
 }
 
 function dotIcon(color){
@@ -1585,7 +1710,7 @@ document.getElementById('useGpsBtn').addEventListener('click', ()=>{
     status.textContent = "GPS lento, provo con una posizione più rapida...";
     status.style.color = 'var(--inkSoft)';
     attemptGeolocation({ timeout: 6000, enableHighAccuracy: false, maximumAge: 60000 }, () => {
-      status.textContent = "Posizione non accessibile da qui — tocca 'Scegli sulla mappa' per indicare il punto esatto.";
+      status.textContent = "Posizione non trovata. Controlla di aver dato l'accesso alla posizione al browser che stai usando (nelle Impostazioni del telefono), oppure tocca 'Scegli sulla mappa' per indicare il punto esatto.";
       status.style.color = 'var(--red)';
     });
   });
@@ -1626,6 +1751,78 @@ function enterPickMode(){
 }
 
 document.getElementById('pickMapBtn').addEventListener('click', enterPickMode);
+
+// ---------- Mappa: livello "Cestini" e proposta di un nuovo punto ----------
+document.getElementById('toggleBinsBtn').addEventListener('click', ()=>{
+  binsVisible = !binsVisible;
+  document.getElementById('toggleBinsBtn').classList.toggle('active', binsVisible);
+  if(!map || !binsLayer) return;
+  if(binsVisible) map.addLayer(binsLayer);
+  else map.removeLayer(binsLayer);
+});
+
+document.getElementById('proposeBinBtn').addEventListener('click', ()=>{
+  if(!currentUser){ showToast("Accedi per proporre un cestino"); return; }
+  pickModeActive = false; // evita conflitti con la scelta punto di una segnalazione
+  pickBinModeActive = true;
+  switchToPage('mappa');
+  document.getElementById('binPickHint').classList.add('show');
+});
+
+document.getElementById('binPickCancelBtn').addEventListener('click', ()=>{
+  pickBinModeActive = false;
+  document.getElementById('binPickHint').classList.remove('show');
+});
+
+function openBinProposeModal(){
+  pendingBinTipo = null;
+  document.getElementById('binNoteInput').value = '';
+  document.querySelectorAll('.bin-type-btn').forEach(b=> b.classList.remove('selected'));
+  const submitBtn = document.getElementById('binProposeSubmitBtn');
+  submitBtn.disabled = true;
+  submitBtn.style.opacity = '.5';
+  document.getElementById('binProposeOverlay').classList.remove('hidden');
+}
+
+document.getElementById('binTypeOptions').addEventListener('click', (e)=>{
+  const btn = e.target.closest('.bin-type-btn');
+  if(!btn) return;
+  pendingBinTipo = btn.dataset.tipo;
+  document.querySelectorAll('.bin-type-btn').forEach(b=> b.classList.toggle('selected', b === btn));
+  const submitBtn = document.getElementById('binProposeSubmitBtn');
+  submitBtn.disabled = false;
+  submitBtn.style.opacity = '1';
+});
+
+document.getElementById('binProposeCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('binProposeOverlay').classList.add('hidden');
+  pendingBinLoc = null;
+  pendingBinTipo = null;
+});
+
+document.getElementById('binProposeSubmitBtn').addEventListener('click', async ()=>{
+  if(!pendingBinLoc || !pendingBinTipo) return;
+  const submitBtn = document.getElementById('binProposeSubmitBtn');
+  submitBtn.disabled = true;
+  try{
+    const res = await fetch(`${API_BASE}/bins-propose`, {
+      method: 'POST', headers: await authHeaders(),
+      body: JSON.stringify({
+        lat: pendingBinLoc.lat, lng: pendingBinLoc.lng,
+        comune: selectedComune, tipo: pendingBinTipo,
+        note: document.getElementById('binNoteInput').value
+      })
+    });
+    if(!res.ok) throw new Error();
+    document.getElementById('binProposeOverlay').classList.add('hidden');
+    showToast("Proposta inviata! Comparirà sulla mappa dopo l'approvazione.");
+  }catch(err){
+    showToast("Errore nell'invio della proposta, riprova.");
+    submitBtn.disabled = false;
+  }
+  pendingBinLoc = null;
+  pendingBinTipo = null;
+});
 document.getElementById('changeLocBtn').addEventListener('click', enterPickMode);
 
 document.getElementById('confirmLocBtn').addEventListener('click', ()=>{
