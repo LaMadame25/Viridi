@@ -138,6 +138,8 @@
   .tipo-chip[data-c="cassonetti"].active{color:var(--carta);}
   .tipo-chip[data-c="pericoloso"].active{color:var(--indiff);}
   .tipo-chip[data-c="idea"].active{color:var(--plastica);}
+  .tipo-chip[data-c="parcheggio"].active{color:var(--amber);}
+  .tipo-chip[data-c="spiaggia"].active{color:var(--vetro);}
   .file-btn{display:flex;align-items:center;gap:5px;font-size:12px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink);}
 
   #aiAnalysis{margin-top:10px;padding:12px;border-radius:12px;background:var(--greenSoft);display:none;}
@@ -277,6 +279,8 @@
   .bin-type-btn{font-size:12px;font-weight:700;padding:8px 12px;border-radius:999px;border:1.5px solid var(--line);background:none;color:var(--ink);}
   .bin-type-btn.selected{border-color:var(--green);background:var(--greenSoft);color:var(--accentText);}
   .mod-section-title{font-weight:800;font-size:13px;margin:18px 0 10px;color:var(--ink);}
+  .media-or-divider{text-align:center;font-size:11px;font-weight:700;color:var(--inkSoft);margin:8px 0;text-transform:uppercase;letter-spacing:.04em;}
+  .video-preview-wrap{position:relative;margin-bottom:10px;}
   .tag.stato{border:1.5px solid var(--red);color:var(--red);background:none;font-family:'Titillium Web';font-weight:900;text-transform:uppercase;letter-spacing:.4px;transform:rotate(-2deg);border-radius:6px;}
   .tag.stato.in-carico{border-color:var(--amber);color:var(--amber);}
   .tag.stato.risolto{border-color:var(--green);color:var(--green);}
@@ -529,11 +533,25 @@
         <div class="photo-hint" id="photoHint" style="display:none;"></div>
         <input type="file" id="photoInput" accept="image/*" style="display:none;" />
 
+        <div class="media-or-divider" id="videoOrDivider">oppure</div>
+        <div class="video-preview-wrap" id="videoPreviewWrap" style="display:none;">
+          <video id="videoPreview" controls playsinline style="width:100%;border-radius:12px;max-height:220px;background:#000;"></video>
+          <button type="button" class="photo-thumb-remove" id="removeVideoBtn" style="position:absolute;top:8px;right:8px;" aria-label="Rimuovi video"><span class="msr" style="font-size:14px;">close</span></button>
+        </div>
+        <div class="photo-tile" id="videoBtn">
+          <span class="msr photo-tile-icon">videocam</span>
+          <div class="photo-tile-label" id="videoTileLabel">Registra o carica un breve video</div>
+        </div>
+        <div class="photo-hint" id="videoHint" style="display:none;">Max 8 secondi circa, max 4 MB — un video sostituisce le foto per questa segnalazione</div>
+        <input type="file" id="videoInput" accept="video/*" style="display:none;" />
+
         <div class="tipo-chip-row" id="tipoChipRow">
           <button type="button" class="tipo-chip active" data-c="organico" data-val="Rifiuti ingombranti"><span class="dot" style="background:var(--organico);"></span>Ingombranti</button>
           <button type="button" class="tipo-chip" data-c="discarica" data-val="Discarica abusiva"><span class="dot" style="background:var(--red);"></span>Discarica</button>
           <button type="button" class="tipo-chip" data-c="cassonetti" data-val="Cassonetti pieni"><span class="dot" style="background:var(--carta);"></span>Cassonetti pieni</button>
           <button type="button" class="tipo-chip" data-c="pericoloso" data-val="Materiale pericoloso"><span class="dot" style="background:var(--indiff);"></span>Pericoloso</button>
+          <button type="button" class="tipo-chip" data-c="parcheggio" data-val="Parcheggiatori abusivi"><span class="dot" style="background:var(--amber);"></span>Parcheggiatori abusivi</button>
+          <button type="button" class="tipo-chip" data-c="spiaggia" data-val="Spiaggia occupata"><span class="dot" style="background:var(--vetro);"></span>Spiagge occupate</button>
           <button type="button" class="tipo-chip" data-c="idea" data-val="Discussione / idea"><span class="dot" style="background:var(--plastica);"></span>Discussione/Idea</button>
         </div>
         <select id="tipoSelect" style="display:none;">
@@ -541,6 +559,8 @@
           <option>Discarica abusiva</option>
           <option>Cassonetti pieni</option>
           <option>Materiale pericoloso</option>
+          <option>Parcheggiatori abusivi</option>
+          <option>Spiaggia occupata</option>
           <option>Discussione / idea</option>
         </select>
 
@@ -670,12 +690,25 @@
   <section class="page" data-page="mappa">
     <div class="map-page-inner">
       <div class="map-toolbar">
+        <button type="button" class="map-chip active" id="toggleZoneNereBtn"><span class="msr" style="font-size:14px;">local_fire_department</span> Zone nere</button>
         <button type="button" class="map-chip" id="toggleBinsBtn"><span class="msr" style="font-size:14px;">delete</span> Cestini</button>
         <button type="button" class="map-chip" id="proposeBinBtn"><span class="msr" style="font-size:14px;">add_location_alt</span> Proponi un cestino</button>
+        <button type="button" class="map-chip" id="toggleAdoptionsBtn"><span class="msr" style="font-size:14px;">volunteer_activism</span> Aree adottate</button>
+        <button type="button" class="map-chip" id="adoptAreaBtn"><span class="msr" style="font-size:14px;">favorite</span> Adotta un'area</button>
       </div>
       <div class="bin-pick-hint" id="binPickHint">
         <span>Tocca un punto della mappa per posizionare il cestino</span>
-        <button type="button" id="binPickCancelBtn" style="background:none;border:none;color:var(--accentText);font-weight:800;">Annulla</button>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button type="button" id="binUseGpsBtn" style="background:none;border:none;color:var(--accentText);font-weight:800;white-space:nowrap;">📍 Usa la mia posizione</button>
+          <button type="button" id="binPickCancelBtn" style="background:none;border:none;color:var(--accentText);font-weight:800;">Annulla</button>
+        </div>
+      </div>
+      <div class="bin-pick-hint" id="adoptionPickHint">
+        <span>Tocca un punto della mappa per scegliere l'area da adottare</span>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button type="button" id="adoptionUseGpsBtn" style="background:none;border:none;color:var(--accentText);font-weight:800;white-space:nowrap;">📍 Usa la mia posizione</button>
+          <button type="button" id="adoptionPickCancelBtn" style="background:none;border:none;color:var(--accentText);font-weight:800;">Annulla</button>
+        </div>
       </div>
       <div id="leafletMap"></div>
       <div id="confirmLocBar">
@@ -685,7 +718,7 @@
           <button type="button" class="confirm-btn pop" id="confirmLocBtn"><span class="msr" style="font-size:14px;color:#fff;">check_circle</span> Conferma</button>
         </div>
       </div>
-      <div class="map-hint-bar"><span class="msr" style="font-size:13px;vertical-align:-2px;">info</span> Il colore del pin indica lo stato: <b style="color:#B5541B;">●</b> segnalato · <b style="color:#C08A2E;">●</b> in carico · <b style="color:#1F4D2C;">●</b> risolto. La <b>★</b> indica una segnalazione a San Marco Evangelista.</div>
+      <div class="map-hint-bar"><span class="msr" style="font-size:13px;vertical-align:-2px;">info</span> Il colore del pin indica lo stato: <b style="color:#B5541B;">●</b> segnalato · <b style="color:#C08A2E;">●</b> in carico · <b style="color:#1F4D2C;">●</b> risolto. L'icona al centro indica il tipo di problema. La <b>★</b> indica una segnalazione a San Marco Evangelista.</div>
     </div>
   </section>
 
@@ -703,6 +736,19 @@
       <div style="display:flex;gap:8px;margin-top:14px;">
         <button type="button" id="binProposeCancelBtn" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:none;color:var(--ink);font-weight:700;">Annulla</button>
         <button type="button" id="binProposeSubmitBtn" disabled style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--green);color:#fff;font-weight:700;opacity:.5;">Invia proposta</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adoptionProposeOverlay" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:310;display:flex;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--card);color:var(--ink);border-radius:18px;max-width:400px;width:100%;padding:20px;">
+      <div class="login-title disp" style="font-size:16px;">Adotta quest'area</div>
+      <div id="adoptionAreaLabel" style="font-size:13px;font-weight:700;color:var(--accentText);margin-top:8px;"></div>
+      <div style="font-size:11.5px;color:var(--inkSoft);margin-top:2px;">Il tuo nome comparirà pubblicamente come persona che segue quest'area.</div>
+      <textarea id="adoptionNoteInput" maxlength="200" placeholder="Perché la adotti? (facoltativo)" rows="2" style="width:100%;margin-top:12px;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--bg);color:var(--ink);font-family:inherit;font-size:13px;resize:none;"></textarea>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button type="button" id="adoptionProposeCancelBtn" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:none;color:var(--ink);font-weight:700;">Annulla</button>
+        <button type="button" id="adoptionProposeSubmitBtn" style="flex:1;padding:10px;border-radius:10px;border:none;background:var(--green);color:#fff;font-weight:700;">Conferma adozione</button>
       </div>
     </div>
   </div>
@@ -797,6 +843,65 @@ function nearestZoneLabel(lat, lng){
   return best || "San Nicola la Strada";
 }
 
+// ---------- Zone nere: punti critici ricorrenti ----------
+const ZONA_NERA_RAGGIO_M = 60;   // segnalazioni entro questo raggio vengono considerate lo stesso punto
+const ZONA_NERA_MIN_SEGNALAZIONI = 3; // sotto questa soglia è un episodio isolato, non una zona nera
+
+// Distanza approssimata in metri tra due coordinate (sufficiente su scala urbana,
+// non serve la precisione di una vera formula di Haversine per poche centinaia di metri).
+function metriTra(lat1, lng1, lat2, lng2){
+  const mPerGradoLat = 111320;
+  const mPerGradoLng = 111320 * Math.cos(lat1 * Math.PI/180);
+  const dLat = (lat2-lat1) * mPerGradoLat;
+  const dLng = (lng2-lng1) * mPerGradoLng;
+  return Math.hypot(dLat, dLng);
+}
+
+// Raggruppa le segnalazioni (esclusi i post "Discussione/idea", che non sono un problema
+// puntuale sul territorio) per vicinanza geografica reale. Ogni gruppo che raggiunge la
+// soglia minima diventa una "zona nera": un punto critico ricorrente, non un episodio isolato.
+function computeZoneNere(){
+  const candidati = posts.filter(p => p.tipo !== "Discussione / idea");
+  const usati = new Set();
+  const zone = [];
+
+  candidati.forEach((seed, i) => {
+    if(usati.has(seed.id)) return;
+    const membri = [seed];
+    usati.add(seed.id);
+    candidati.forEach((p, j) => {
+      if(j <= i || usati.has(p.id)) return;
+      if(metriTra(seed.lat, seed.lng, p.lat, p.lng) <= ZONA_NERA_RAGGIO_M){
+        membri.push(p);
+        usati.add(p.id);
+      }
+    });
+    if(membri.length >= ZONA_NERA_MIN_SEGNALAZIONI){
+      const lat = membri.reduce((s,p)=>s+p.lat,0) / membri.length;
+      const lng = membri.reduce((s,p)=>s+p.lng,0) / membri.length;
+      // Nome più frequente tra le vie indicate dai membri; se nessuno l'ha indicata,
+      // usa il punto di riferimento più vicino al centro del gruppo.
+      const countVia = {};
+      membri.forEach(p => { if(p.via) countVia[p.via] = (countVia[p.via]||0) + 1; });
+      const viaSorted = Object.entries(countVia).sort((a,b)=>b[1]-a[1]);
+      const label = viaSorted.length ? viaSorted[0][0] : nearestZoneLabel(lat, lng);
+      const irrisolte = membri.filter(p => p.stato !== "Risolto").length;
+      // "Da quanto è aperta" si calcola sulla segnalazione irrisolta più vecchia del gruppo:
+      // se tutto è stato risolto, la zona non è più "aperta", è solo storico.
+      const membriIrrisolti = membri.filter(p => p.stato !== "Risolto" && typeof p.createdAt === 'number');
+      const primaSegnalazione = membriIrrisolti.length
+        ? Math.min(...membriIrrisolti.map(p => p.createdAt))
+        : null;
+      const giorniAperta = primaSegnalazione !== null
+        ? Math.floor((Date.now() - primaSegnalazione) / 86400000)
+        : null;
+      zone.push({ lat, lng, label, count: membri.length, irrisolte, giorniAperta, ids: membri.map(p=>p.id) });
+    }
+  });
+
+  return zone.sort((a,b) => b.count - a.count);
+}
+
 // Nome vero della via tramite reverse geocoding (OpenStreetMap Nominatim).
 // Se l'API non risponde (offline, errore, rate limit) torniamo al vecchio sistema a zone fisse.
 const geoCache = {};
@@ -835,6 +940,8 @@ let filterStato = "Tutti";
 let pendingLocation = null;
 let pendingFotos = [];
 const MAX_FOTOS = 4;
+let pendingVideo = null;
+const MAX_VIDEO_BYTES = 4 * 1024 * 1024; // 4 MB: oltre questo la richiesta rischia di superare il limite della funzione serverless
 let selectedComune = "San Nicola la Strada";
 document.querySelectorAll('#comuneBannerRow .comune-banner').forEach(btn=>{
   btn.addEventListener('click', ()=>{
@@ -859,6 +966,13 @@ let pickModeActive = false;
 let bins = [];
 let binsLayer = null;
 let binsVisible = false;
+let zoneNereLayer = null;
+let zoneNereVisible = true;
+let adoptions = [];
+let adoptionsLayer = null;
+let adoptionsVisible = false;
+let pickAdoptionModeActive = false;
+let pendingAdoptionLoc = null;
 let pickBinModeActive = false;
 let pendingBinLoc = null;
 let pendingBinTipo = null;
@@ -991,6 +1105,7 @@ function finishLogin(user){
   if(currentUser.isAdmin) document.getElementById('modBtn').style.display = '';
   loadPosts();
   loadBins();
+  loadAdoptions();
   setTimeout(()=>{ if(map) map.invalidateSize(); }, 100);
 }
 
@@ -1027,10 +1142,12 @@ function renderMyProfile(){
   // Statistiche in stile "post / like ricevuti / risolte", come una bio social
   const totLike = myPosts.reduce((sum, p) => sum + (p.like || 0), 0);
   const totRisolte = myPosts.filter(p => p.stato === "Risolto").length;
+  const totAree = adoptions.filter(a => a.isMine).length;
   document.getElementById('myStatsRow').innerHTML = `
     <div><div class="stat-num">${myPosts.length}</div><div class="stat-label">Segnalazioni</div></div>
     <div><div class="stat-num">${totLike}</div><div class="stat-label">Like ricevuti</div></div>
     <div><div class="stat-num">${totRisolte}</div><div class="stat-label">Risolte</div></div>
+    <div><div class="stat-num">${totAree}</div><div class="stat-label">Aree adottate</div></div>
   `;
 
   const grid = document.getElementById('myPostsGrid');
@@ -1386,6 +1503,8 @@ function initMap(){
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
   binsLayer = L.layerGroup(); // non aggiunto alla mappa finché l'utente non attiva "Cestini"
+  zoneNereLayer = L.layerGroup().addTo(map); // visibile di default: è la funzionalità principale per il Comune
+  adoptionsLayer = L.layerGroup(); // non aggiunto alla mappa finché l'utente non attiva "Aree adottate"
 
   map.on('click', (e) => {
     if(pickBinModeActive){
@@ -1393,6 +1512,13 @@ function initMap(){
       pickBinModeActive = false;
       document.getElementById('binPickHint').classList.remove('show');
       openBinProposeModal();
+      return;
+    }
+    if(pickAdoptionModeActive){
+      pendingAdoptionLoc = { lat: e.latlng.lat, lng: e.latlng.lng };
+      pickAdoptionModeActive = false;
+      document.getElementById('adoptionPickHint').classList.remove('show');
+      openAdoptionProposeModal();
       return;
     }
     if(!pickModeActive) return;
@@ -1431,21 +1557,92 @@ async function loadBins(){
   }catch(err){ /* silenzioso: i cestini sono un livello opzionale, non blocca il resto dell'app */ }
 }
 
-function dotIcon(color){
+function adoptionIcon(){
   return L.divIcon({
     className: 'pin-marker',
-    html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);"></div>`,
-    iconSize:[16,16], iconAnchor:[8,8]
+    html: `<div style="width:24px;height:24px;border-radius:50%;background:#7A4FA3;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);display:flex;align-items:center;justify-content:center;"><span class="msr" style="font-size:13px;color:#fff;">volunteer_activism</span></div>`,
+    iconSize:[24,24], iconAnchor:[12,12]
   });
 }
 
-function starIcon(color){
+function renderAdoptionMarkers(){
+  if(!adoptionsLayer) return;
+  adoptionsLayer.clearLayers();
+  adoptions.forEach(a=>{
+    const marker = L.marker([a.lat, a.lng], { icon: adoptionIcon() });
+    const daQuanto = relativeTime(a.createdAt);
+    const removeBtn = a.isMine ? `<br><button class="adoption-unfollow-btn" data-id="${a.id}" style="margin-top:6px;padding:5px 10px;border-radius:8px;border:1px solid #C0392B;background:none;color:#C0392B;font-weight:700;font-size:11px;">Smetti di seguire</button>` : '';
+    marker.bindPopup(`<b>💜 ${escapeHtml(a.label)}</b><br>Seguita da ${escapeHtml(a.adottante)} · da ${daQuanto}${a.nota ? `<br><i>${escapeHtml(a.nota)}</i>` : ''}${removeBtn}`);
+    adoptionsLayer.addLayer(marker);
+  });
+}
+
+async function loadAdoptions(){
+  try{
+    const res = await fetch(`${API_BASE}/adoptions-list`, { headers: await authHeaders() });
+    if(!res.ok) return;
+    adoptions = await res.json();
+    renderAdoptionMarkers();
+  }catch(err){ /* silenzioso: le adozioni sono un livello opzionale, non blocca il resto dell'app */ }
+}
+
+// Vero se esiste già almeno un'area adottata entro il raggio di una zona nera:
+// usato per invitare i cittadini ad adottare le zone nere ancora "orfane".
+function zonaHaAdozione(lat, lng){
+  return adoptions.some(a => metriTra(lat, lng, a.lat, a.lng) <= ZONA_NERA_RAGGIO_M);
+}
+
+function renderZoneNereMarkers(){
+  if(!zoneNereLayer) return;
+  zoneNereLayer.clearLayers();
+  const zone = computeZoneNere();
+  zone.forEach(z=>{
+    // Cerchio semi-trasparente che si allarga in base al numero di segnalazioni:
+    // rende visivamente "pesante" un punto critico rispetto a un pin singolo.
+    const raggio = 25 + Math.min(z.count, 10) * 6;
+    const circle = L.circle([z.lat, z.lng], {
+      radius: raggio,
+      color: '#C0392B',
+      weight: 2,
+      fillColor: '#C0392B',
+      fillOpacity: 0.18
+    });
+    const inviteAdozione = zonaHaAdozione(z.lat, z.lng) ? '' : `<br><button class="zona-adotta-btn" data-lat="${z.lat}" data-lng="${z.lng}" style="margin-top:6px;padding:5px 10px;border-radius:8px;border:1px solid #7A4FA3;background:none;color:#7A4FA3;font-weight:700;font-size:11px;">🤍 Nessuno la segue — adottala</button>`;
+    circle.bindPopup(`<b>⚠️ Zona nera — ${escapeHtml(z.label)}</b><br>${z.count} segnalazioni ricorrenti in questo punto${z.irrisolte ? ` (${z.irrisolte} ancora non risolte)` : ''}${z.giorniAperta !== null ? `<br><b>Aperta da ${z.giorniAperta} giorn${z.giorniAperta===1?'o':'i'} senza intervento risolutivo</b>` : ''}${inviteAdozione}`);
+    circle.addTo(zoneNereLayer);
+  });
+}
+
+const TIPO_ICON = {
+  "Rifiuti ingombranti": "chair",
+  "Discarica abusiva": "delete_sweep",
+  "Cassonetti pieni": "delete",
+  "Materiale pericoloso": "warning",
+  "Parcheggiatori abusivi": "directions_car",
+  "Spiaggia occupata": "beach_access",
+  "Discussione / idea": "chat_bubble"
+};
+
+function dotIcon(color, tipo){
+  const iconName = TIPO_ICON[tipo] || "place";
   return L.divIcon({
     className: 'pin-marker',
-    html: `<svg width="20" height="20" viewBox="0 0 20 20" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));">
-      <path d="M10 1 L12.4 7 L19 7.6 L14 12 L15.5 18.5 L10 15 L4.5 18.5 L6 12 L1 7.6 L7.6 7 Z" fill="${color}" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
-    </svg>`,
-    iconSize:[20,20], iconAnchor:[10,10]
+    html: `<div style="width:22px;height:22px;border-radius:50%;background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;"><span class="msr" style="font-size:13px;color:#fff;">${iconName}</span></div>`,
+    iconSize:[22,22], iconAnchor:[11,11]
+  });
+}
+
+function starIcon(color, tipo){
+  const iconName = TIPO_ICON[tipo] || "place";
+  return L.divIcon({
+    className: 'pin-marker',
+    html: `<div style="position:relative;width:22px;height:22px;">
+      <svg width="22" height="22" viewBox="0 0 20 20" style="filter:drop-shadow(0 1px 2px rgba(0,0,0,.35));position:absolute;top:0;left:0;">
+        <path d="M10 1 L12.4 7 L19 7.6 L14 12 L15.5 18.5 L10 15 L4.5 18.5 L6 12 L1 7.6 L7.6 7 Z" fill="${color}" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+      </svg>
+      <span class="msr" style="font-size:9.5px;color:#fff;position:absolute;top:44%;left:50%;transform:translate(-50%,-50%);">${iconName}</span>
+    </div>`,
+    iconSize:[22,22], iconAnchor:[11,11]
   });
 }
 
@@ -1454,12 +1651,13 @@ function renderMarkers(){
   markersLayer.clearLayers();
   posts.forEach(p=>{
     const inSanMarco = p.comune ? p.comune === "San Marco Evangelista" : isSanMarco(p.lat, p.lng);
-    const icon = inSanMarco ? starIcon(STATO_COLOR[p.stato]) : dotIcon(STATO_COLOR[p.stato]);
+    const icon = inSanMarco ? starIcon(STATO_COLOR[p.stato], p.tipo) : dotIcon(STATO_COLOR[p.stato], p.tipo);
     const marker = L.marker([p.lat,p.lng], { icon });
     const luogo = inSanMarco ? ' · <span style="color:var(--green);font-weight:700;">San Marco Ev.</span>' : '';
     marker.bindPopup(`<b>${p.autore}</b>${luogo}<br>${p.testo.slice(0,80)}${p.testo.length>80?'…':''}<br><small>${p.stato}</small>`);
     marker.addTo(markersLayer);
   });
+  renderZoneNereMarkers();
 }
 
 function pendingIcon(){
@@ -1534,7 +1732,7 @@ function renderFeed(){
       <div class="post-top">
         <div class="avatar sm">${avatarIconHtml(p.autore, 'var(--accentText)')}</div>
         <div>
-          <div><span class="post-name disp">${p.autore}</span> <span class="post-time">· ${p.quando}</span></div>
+          <div><span class="post-name disp">${p.autore}</span> <span class="post-time">· ${relativeTime(p.createdAt, p.quando)}</span></div>
           <div class="tag-row">
             <a class="tag tag-location" href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lng}" target="_blank" rel="noopener"><span class="msr" style="font-size:11px;vertical-align:-1px;">location_on</span> ${p.via || nearestZoneLabel(p.lat,p.lng)}</a>
             ${(p.comune ? p.comune === "San Marco Evangelista" : isSanMarco(p.lat,p.lng)) ? `<span class="tag" style="background:var(--greenSoft);color:var(--accentText);">★ San Marco Ev.</span>` : ''}
@@ -1542,7 +1740,7 @@ function renderFeed(){
         </div>
       </div>
       <div class="post-text">${escapeHtml(p.testo)}</div>
-      ${(() => {
+      ${p.video ? `<video class="post-video" src="${p.video}" controls playsinline style="width:100%;border-radius:12px;margin-top:10px;max-height:320px;background:#000;"></video>` : (() => {
         // Compatibilità: post vecchi hanno "foto" (singola), post nuovi hanno "fotos" (array)
         const fotoList = (p.fotos && p.fotos.length) ? p.fotos : (p.foto ? [p.foto] : []);
         if(fotoList.length === 0) return '';
@@ -1581,11 +1779,34 @@ function escapeHtml(s){
   return d.innerHTML;
 }
 
+// Calcola "3 ore fa", "5 giorni fa" ecc. dal timestamp reale, invece di fidarsi
+// di una stringa fissa salvata una volta sola al momento della pubblicazione
+// (bug corretto: prima ogni post restava per sempre scritto "adesso").
+function relativeTime(createdAt, fallback){
+  if(typeof createdAt !== 'number') return fallback || 'di recente';
+  const diffSec = Math.floor((Date.now() - createdAt) / 1000);
+  if(diffSec < 60) return 'adesso';
+  const diffMin = Math.floor(diffSec / 60);
+  if(diffMin < 60) return `${diffMin} minut${diffMin===1?'o':'i'} fa`;
+  const diffOre = Math.floor(diffMin / 60);
+  if(diffOre < 24) return `${diffOre} or${diffOre===1?'a':'e'} fa`;
+  const diffGiorni = Math.floor(diffOre / 24);
+  if(diffGiorni < 7) return `${diffGiorni} giorn${diffGiorni===1?'o':'i'} fa`;
+  const diffSett = Math.floor(diffGiorni / 7);
+  if(diffSett < 5) return `${diffSett} settiman${diffSett===1?'a':'e'} fa`;
+  const diffMesi = Math.floor(diffGiorni / 30);
+  if(diffMesi < 12) return `${diffMesi} mes${diffMesi===1?'e':'i'} fa`;
+  const diffAnni = Math.floor(diffGiorni / 365);
+  return `${diffAnni} ann${diffAnni===1?'o':'i'} fa`;
+}
+
 const TIPO_COLOR = {
   "Rifiuti ingombranti": "#8B5E34",
   "Discarica abusiva": "#B5541B",
   "Cassonetti pieni": "#C9962C",
   "Materiale pericoloso": "#6B6F68",
+  "Parcheggiatori abusivi": "#B4841F",
+  "Spiaggia occupata": "#2A7A55",
   "Discussione / idea": "#2C6FBF"
 };
 let statsDonutChart = null;
@@ -1617,6 +1838,8 @@ function renderStats(){
   const zoneSorted = Object.entries(countZona).sort((a,b) => b[1]-a[1]);
   const maxZonaCount = zoneSorted.length ? zoneSorted[0][1] : 1;
 
+  const zoneNere = computeZoneNere();
+
   const tipoSorted = Object.entries(countTipo).sort((a,b) => b[1]-a[1]);
   const maxTipoCount = tipoSorted.length ? tipoSorted[0][1] : 1;
 
@@ -1638,6 +1861,40 @@ function renderStats(){
         <div class="stats-hero-legend-item"><span style="width:8px;height:8px;border-radius:50%;background:${STATO_COLOR['Risolto']};flex-shrink:0;"></span>Risolto <b>${countStato['Risolto']||0}</b></div>
       </div>
     </div>
+
+    ${zoneNere.length > 0 ? `
+    <div class="section-title"><span class="msr" style="font-size:14px;vertical-align:-2px;color:#C0392B;">warning</span> Zone nere — punti critici ricorrenti</div>
+    <div class="card" style="margin-top:0;padding:6px 16px;">
+      ${zoneNere.map((z,i) => `
+        <div class="stats-rank-row">
+          <div class="stats-rank-badge" style="background:#C0392B;color:#fff;">${i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="stats-rank-name">${escapeHtml(z.label)}</div>
+            <div style="font-size:11px;color:var(--inkSoft);">${z.count} segnalazioni ravvicinate${z.irrisolte ? ` · ${z.irrisolte} non risolte` : ' · tutte risolte'}</div>
+            ${z.giorniAperta !== null ? `<div style="font-size:12px;font-weight:800;color:#C0392B;margin-top:2px;">⏱ Aperta da ${z.giorniAperta} giorn${z.giorniAperta===1?'o':'i'} senza intervento</div>` : ''}
+            ${zonaHaAdozione(z.lat, z.lng) ? '' : `<button class="zona-adotta-btn" data-lat="${z.lat}" data-lng="${z.lng}" style="margin-top:6px;padding:5px 10px;border-radius:8px;border:1px solid #7A4FA3;background:none;color:#7A4FA3;font-weight:700;font-size:11px;">🤍 Nessuno la segue — adottala</button>`}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    <div class="footer-note" style="margin-top:0;">Una zona nera indica ${ZONA_NERA_MIN_SEGNALAZIONI} o più segnalazioni entro pochi metri l'una dall'altra: un problema strutturale, non un episodio isolato.</div>
+    ` : ''}
+
+    ${adoptions.length > 0 ? `
+    <div class="section-title"><span class="msr" style="font-size:14px;vertical-align:-2px;color:#7A4FA3;">volunteer_activism</span> Aree adottate dai cittadini</div>
+    <div class="card" style="margin-top:0;padding:6px 16px;">
+      ${adoptions.map((a,i) => `
+        <div class="stats-rank-row">
+          <div class="stats-rank-badge" style="background:#7A4FA3;color:#fff;">${i+1}</div>
+          <div style="flex:1;min-width:0;">
+            <div class="stats-rank-name">${escapeHtml(a.label)}</div>
+            <div style="font-size:11px;color:var(--inkSoft);">Seguita da ${escapeHtml(a.adottante)} · da ${relativeTime(a.createdAt)}</div>
+            ${a.nota ? `<div style="font-size:11.5px;color:var(--ink);margin-top:2px;font-style:italic;">"${escapeHtml(a.nota)}"</div>` : ''}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+    ` : ''}
 
     <div class="section-title"><span class="msr" style="font-size:14px;vertical-align:-2px;">local_fire_department</span> Zone più segnalate</div>
     <div class="card" style="margin-top:0;padding:6px 16px;">
@@ -1716,8 +1973,7 @@ document.getElementById('useGpsBtn').addEventListener('click', ()=>{
   });
 });
 
-function attemptGeolocation(options, onGiveUp){
-  const status = document.getElementById('locStatus');
+function attemptGeolocation(options, onGiveUp, onSuccess){
   let answered = false;
   const timer = setTimeout(()=>{
     if(answered) return;
@@ -1730,8 +1986,15 @@ function attemptGeolocation(options, onGiveUp){
       if(answered) return;
       answered = true;
       clearTimeout(timer);
-      pendingLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      updateLocStatus();
+      const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      if(onSuccess){
+        onSuccess(loc);
+      } else {
+        // Comportamento di default (usato dal flusso "Segnala"): imposta subito
+        // la posizione della segnalazione in corso.
+        pendingLocation = loc;
+        updateLocStatus();
+      }
     },
     (err)=>{
       if(answered) return;
@@ -1761,6 +2024,14 @@ document.getElementById('toggleBinsBtn').addEventListener('click', ()=>{
   else map.removeLayer(binsLayer);
 });
 
+document.getElementById('toggleZoneNereBtn').addEventListener('click', ()=>{
+  zoneNereVisible = !zoneNereVisible;
+  document.getElementById('toggleZoneNereBtn').classList.toggle('active', zoneNereVisible);
+  if(!map || !zoneNereLayer) return;
+  if(zoneNereVisible) map.addLayer(zoneNereLayer);
+  else map.removeLayer(zoneNereLayer);
+});
+
 document.getElementById('proposeBinBtn').addEventListener('click', ()=>{
   if(!currentUser){ showToast("Accedi per proporre un cestino"); return; }
   pickModeActive = false; // evita conflitti con la scelta punto di una segnalazione
@@ -1772,6 +2043,137 @@ document.getElementById('proposeBinBtn').addEventListener('click', ()=>{
 document.getElementById('binPickCancelBtn').addEventListener('click', ()=>{
   pickBinModeActive = false;
   document.getElementById('binPickHint').classList.remove('show');
+});
+
+document.getElementById('binUseGpsBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('binUseGpsBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Rilevamento...';
+  const onBinLocationFound = (loc) => {
+    pendingBinLoc = loc;
+    pickBinModeActive = false;
+    btn.textContent = originalText;
+    document.getElementById('binPickHint').classList.remove('show');
+    openBinProposeModal();
+  };
+  attemptGeolocation({ timeout: 8000, enableHighAccuracy: true, maximumAge: 0 }, () => {
+    attemptGeolocation({ timeout: 6000, enableHighAccuracy: false, maximumAge: 60000 }, () => {
+      btn.textContent = originalText;
+      showToast("Posizione non trovata. Controlla i permessi del browser, oppure tocca un punto sulla mappa.");
+    }, onBinLocationFound);
+  }, onBinLocationFound);
+});
+
+// ---------- Mappa: livello "Aree adottate" e flusso di adozione ----------
+document.getElementById('toggleAdoptionsBtn').addEventListener('click', ()=>{
+  adoptionsVisible = !adoptionsVisible;
+  document.getElementById('toggleAdoptionsBtn').classList.toggle('active', adoptionsVisible);
+  if(!map || !adoptionsLayer) return;
+  if(adoptionsVisible) map.addLayer(adoptionsLayer);
+  else map.removeLayer(adoptionsLayer);
+});
+
+document.getElementById('adoptAreaBtn').addEventListener('click', ()=>{
+  if(!currentUser){ showToast("Accedi per adottare un'area"); return; }
+  pickModeActive = false;
+  pickBinModeActive = false;
+  pickAdoptionModeActive = true;
+  switchToPage('mappa');
+  document.getElementById('adoptionPickHint').classList.add('show');
+});
+
+document.getElementById('adoptionPickCancelBtn').addEventListener('click', ()=>{
+  pickAdoptionModeActive = false;
+  document.getElementById('adoptionPickHint').classList.remove('show');
+});
+
+document.getElementById('adoptionUseGpsBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('adoptionUseGpsBtn');
+  const originalText = btn.textContent;
+  btn.textContent = 'Rilevamento...';
+  const onAdoptionLocationFound = (loc) => {
+    pendingAdoptionLoc = loc;
+    pickAdoptionModeActive = false;
+    btn.textContent = originalText;
+    document.getElementById('adoptionPickHint').classList.remove('show');
+    openAdoptionProposeModal();
+  };
+  attemptGeolocation({ timeout: 8000, enableHighAccuracy: true, maximumAge: 0 }, () => {
+    attemptGeolocation({ timeout: 6000, enableHighAccuracy: false, maximumAge: 60000 }, () => {
+      btn.textContent = originalText;
+      showToast("Posizione non trovata. Controlla i permessi del browser, oppure tocca un punto sulla mappa.");
+    }, onAdoptionLocationFound);
+  }, onAdoptionLocationFound);
+});
+
+function openAdoptionProposeModal(){
+  if(!pendingAdoptionLoc) return;
+  document.getElementById('adoptionNoteInput').value = '';
+  document.getElementById('adoptionAreaLabel').textContent = nearestZoneLabel(pendingAdoptionLoc.lat, pendingAdoptionLoc.lng);
+  document.getElementById('adoptionProposeOverlay').classList.remove('hidden');
+}
+
+document.getElementById('adoptionProposeCancelBtn').addEventListener('click', ()=>{
+  document.getElementById('adoptionProposeOverlay').classList.add('hidden');
+  pendingAdoptionLoc = null;
+});
+
+document.getElementById('adoptionProposeSubmitBtn').addEventListener('click', async ()=>{
+  if(!pendingAdoptionLoc) return;
+  const submitBtn = document.getElementById('adoptionProposeSubmitBtn');
+  submitBtn.disabled = true;
+  try{
+    const res = await fetch(`${API_BASE}/adoptions-create`, {
+      method: 'POST', headers: await authHeaders(),
+      body: JSON.stringify({
+        lat: pendingAdoptionLoc.lat, lng: pendingAdoptionLoc.lng,
+        comune: selectedComune,
+        label: document.getElementById('adoptionAreaLabel').textContent,
+        nota: document.getElementById('adoptionNoteInput').value
+      })
+    });
+    if(!res.ok) throw new Error();
+    document.getElementById('adoptionProposeOverlay').classList.add('hidden');
+    showToast("Area adottata! Ora comparirai nella lista di chi la segue.");
+    loadAdoptions();
+  }catch(err){
+    showToast("Errore nell'invio, riprova.");
+  }
+  submitBtn.disabled = false;
+  pendingAdoptionLoc = null;
+});
+
+// Delega: il bottone "adotta questa zona nera" nel popup della mappa apre subito
+// il modale di conferma, saltando la fase di "tocca un punto" perché le coordinate
+// della zona sono già note.
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.zona-adotta-btn');
+  if(!btn) return;
+  if(!currentUser){ showToast("Accedi per adottare un'area"); return; }
+  pendingAdoptionLoc = { lat: parseFloat(btn.dataset.lat), lng: parseFloat(btn.dataset.lng) };
+  if(map) map.closePopup();
+  openAdoptionProposeModal();
+});
+
+// Delega: il bottone "Smetti di seguire" viene creato dentro il popup di Leaflet,
+// quindi va intercettato a livello di documento invece che con un listener diretto.
+document.addEventListener('click', async (e)=>{
+  const btn = e.target.closest('.adoption-unfollow-btn');
+  if(!btn) return;
+  btn.disabled = true;
+  btn.textContent = '...';
+  try{
+    await fetch(`${API_BASE}/adoptions-delete`, {
+      method: 'POST', headers: await authHeaders(),
+      body: JSON.stringify({ id: btn.dataset.id })
+    });
+    map.closePopup();
+    loadAdoptions();
+    showToast("Hai smesso di seguire quest'area.");
+  }catch(err){
+    btn.disabled = false;
+    btn.textContent = 'Smetti di seguire';
+  }
 });
 
 function openBinProposeModal(){
@@ -1845,6 +2247,7 @@ document.getElementById('clearLocBtn').addEventListener('click', ()=>{
 });
 
 document.getElementById('photoBtn').addEventListener('click', ()=>{
+  if(pendingVideo){ showToast("Rimuovi il video per aggiungere foto invece"); return; }
   if(pendingFotos.length >= MAX_FOTOS) return;
   document.getElementById('photoInput').click();
 });
@@ -1885,6 +2288,9 @@ function renderPhotoGallery(){
   const tile = document.getElementById('photoBtn');
   const label = document.getElementById('photoTileLabel');
   const hint = document.getElementById('photoHint');
+  const videoBtn = document.getElementById('videoBtn');
+  const videoOrDivider = document.getElementById('videoOrDivider');
+  const videoHint = document.getElementById('videoHint');
 
   if(pendingFotos.length === 0){
     gallery.style.display = 'none';
@@ -1892,8 +2298,18 @@ function renderPhotoGallery(){
     tile.classList.remove('has-photo','maxed');
     label.textContent = 'Scatta o carica una foto';
     hint.style.display = 'none';
+    if(!pendingVideo){
+      videoBtn.style.display = '';
+      videoOrDivider.style.display = '';
+      videoHint.style.display = '';
+    }
     return;
   }
+
+  // Con almeno una foto selezionata, l'opzione video resta nascosta: sono alternativi.
+  videoBtn.style.display = 'none';
+  videoOrDivider.style.display = 'none';
+  videoHint.style.display = 'none';
 
   gallery.style.display = 'flex';
   gallery.innerHTML = pendingFotos.map((foto, i) => `
@@ -1918,6 +2334,46 @@ document.getElementById('photoGallery').addEventListener('click', (e)=>{
   pendingFotos.splice(i, 1);
   if(pendingFotos.length === 0){ pendingAnalysis = null; }
   renderPhotoGallery();
+});
+
+// ---------- Video (alternativo alle foto: un solo breve video per segnalazione) ----------
+document.getElementById('videoBtn').addEventListener('click', ()=>{
+  if(pendingFotos.length > 0){ showToast("Rimuovi le foto per aggiungere un video invece"); return; }
+  document.getElementById('videoInput').click();
+});
+
+document.getElementById('videoInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  if(file.size > MAX_VIDEO_BYTES){
+    showToast(`Video troppo pesante (${(file.size/1024/1024).toFixed(1)} MB) — registra un clip più breve, max 4 MB`);
+    e.target.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    pendingVideo = reader.result;
+    const preview = document.getElementById('videoPreview');
+    preview.src = pendingVideo;
+    document.getElementById('videoPreviewWrap').style.display = 'block';
+    document.getElementById('videoBtn').style.display = 'none';
+    document.getElementById('videoHint').style.display = 'none';
+    // Nasconde le opzioni foto finché il video è presente, per non confondere l'utente
+    document.getElementById('photoBtn').style.display = 'none';
+    document.getElementById('videoOrDivider').style.display = 'none';
+    e.target.value = '';
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('removeVideoBtn').addEventListener('click', ()=>{
+  pendingVideo = null;
+  document.getElementById('videoPreview').src = '';
+  document.getElementById('videoPreviewWrap').style.display = 'none';
+  document.getElementById('videoBtn').style.display = '';
+  document.getElementById('videoHint').style.display = '';
+  document.getElementById('photoBtn').style.display = '';
+  document.getElementById('videoOrDivider').style.display = '';
 });
 
 const postTextEl = document.getElementById('postText');
@@ -1947,7 +2403,7 @@ document.getElementById('composer').addEventListener('submit', async (e)=>{
     lat: loc.lat, lng: loc.lng, via,
     comune: selectedComune,
     tipo: document.getElementById('tipoSelect').value,
-    testo, fotos: pendingFotos,
+    testo, fotos: pendingFotos, video: pendingVideo,
     aiMaterial: pendingAnalysis ? pendingAnalysis.material : null,
     aiCategory: pendingAnalysis ? pendingAnalysis.category : null
   };
@@ -1982,6 +2438,7 @@ document.getElementById('composer').addEventListener('submit', async (e)=>{
   postTextEl.value=''; pendingLocation=null; pendingFotos=[]; pendingAnalysis=null;
   renderPhotoGallery();
   document.getElementById('photoInput').value='';
+  document.getElementById('removeVideoBtn').click(); // resetta anche il video, se presente
   document.getElementById('aiAnalysis').className = '';
   document.getElementById('aiAnalysis').innerHTML = '';
   if(pendingMarker && map){ map.removeLayer(pendingMarker); pendingMarker=null; }
